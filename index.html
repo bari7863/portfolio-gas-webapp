@@ -1,0 +1,1839 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8" />
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#0f1730;
+      --card:#0e162f;
+      --text:#e8eeff;
+      --muted:#a9b4d6;
+      --line:rgba(255,255,255,.12);
+      --shadow: 0 18px 50px rgba(0,0,0,.35);
+      --radius:18px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      background: radial-gradient(1200px 800px at 10% 0%, #1a2a5a 0%, rgba(26,42,90,0) 55%),
+                  radial-gradient(1200px 800px at 90% 10%, #3b1d5a 0%, rgba(59,29,90,0) 55%),
+                  var(--bg);
+      color:var(--text);
+      font-size:16px;
+    }
+
+    header{
+      position:sticky; top:0; z-index:20;
+      background: linear-gradient(180deg, rgba(16,27,58,.92), rgba(16,27,58,.55));
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .topbar{
+      display:flex; align-items:center; gap:14px;
+      padding:16px 18px;
+    }
+
+    .brand{ display:flex; flex-direction:column; gap:4px; }
+    .brand .title{ font-weight:950; letter-spacing:.02em; font-size:20px; }
+    .brand .sub{ color:var(--muted); font-size:14px; font-weight:800; }
+
+    .spacer{ flex:1; }
+
+    .headerActions{
+      display:flex;
+      align-items:center;
+      gap:10px;      /* ←ボタンとボタンの間の余白（少しだけ） */
+      width:auto;    /* ←PCで横いっぱいにしない */
+    }
+
+    .btn{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      padding:12px 14px;
+      border-radius:14px;
+      cursor:pointer;
+      font-weight:900;
+      font-size:14px;
+    }
+    .btn:hover{ background: rgba(255,255,255,.10); }
+
+    /* ===== Header (SP) 見やすさ調整 ===== */
+    @media (max-width: 480px){
+      .topbar{
+        gap:10px;
+        padding:12px 12px;
+        flex-wrap:wrap;   /* 狭い画面で折り返す */
+      }
+
+      .brand .title{
+        font-size:16px;
+      }
+
+      .btn{
+        font-size:12px;
+        padding:10px 10px;
+        white-space:nowrap; /* ←「再読み込 み」みたいに折り返さない */
+      }
+
+      /* スマホ時はタイトル→次行にボタン */
+      .brand{ flex: 1 0 100%; }
+      .spacer{ display:none; }
+
+      .headerActions{
+        width:100%;
+        display:grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        align-items:center;
+        gap:0;
+      }
+
+      #loginScreenBtn{ justify-self:start; }
+      #termsBtn{ justify-self:center; }
+      #reloadBtn{ justify-self:end; }
+    }
+
+    /* ★画面いっぱいに使う（中央寄せや最大幅をやめる） */
+    .layout{
+      display:grid;
+      grid-template-columns: 360px 1fr;
+      gap:0;
+      padding:0;
+      max-width: none;
+      margin:0;
+    }
+
+    /* Sidebar */
+    .sidebar{
+      position:sticky;
+      top:72px;
+      height: calc(100vh - 72px);
+      overflow:auto;
+      border-right:1px solid var(--line);
+      border-radius: 0;
+      background: linear-gradient(180deg, rgba(15,23,48,.92), rgba(15,23,48,.70));
+      backdrop-filter: blur(10px);
+      box-shadow: none;
+      padding:18px;
+    }
+
+    /* PC：左サイドバーを完全固定 */
+    @media (min-width: 901px){
+      .layout{ grid-template-columns: 1fr; }
+      .sidebar{
+        position:fixed;
+        top:72px;
+        left:0;
+        width:360px;
+        height: calc(100vh - 72px);
+        z-index:19;
+      }
+      .main{ margin-left:360px; }
+
+      /* PC：検索バーは常時表示なので「閉じる」は出さない */
+      #searchCloseBtn{ display:none; }
+    }
+
+    .sec-title{
+      font-size:13px;            /* ★③ */
+      letter-spacing:.12em;
+      color: var(--muted);
+      font-weight:950;
+      margin: 16px 0 10px 0;
+    }
+    .field{ display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+    label{ font-size:13px; color: var(--muted); font-weight:950; } /* ★③ */
+
+    input, select{
+      width:100%;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      outline:none;
+      font-size:15px;
+      font-weight:900;
+    }
+    input::placeholder{ color: rgba(233,238,255,.45); }
+
+    /* プルダウンの「開いたときの候補」を黒文字に */
+    select option{
+      color:#111 !important;
+      background:#fff !important;
+    }
+
+    .row2{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    .rowBtn{ display:flex; gap:10px; margin-top:14px; }
+
+    .btnPrimary{
+      background: linear-gradient(135deg, rgba(111,177,252,.85), rgba(67,100,247,.85));
+      border: 1px solid rgba(255,255,255,.14);
+    }
+    .btnPrimary:hover{ filter: brightness(1.05); }
+
+    #clearBtn{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+    }
+    #clearBtn:hover{
+      background: rgba(255,255,255,.10);
+    }
+
+    .hint{
+      font-size:13px;
+      color: var(--muted);
+      line-height:1.6;
+      margin-top:12px;
+      font-weight:800;
+    }
+
+    /* Main */
+    .main{
+      min-height: 70vh;
+      border: none;
+      border-radius: 0;
+      background: linear-gradient(180deg, rgba(15,23,48,.55), rgba(15,23,48,.20));
+      backdrop-filter: blur(10px);
+      box-shadow: none;
+      padding:18px;
+    }
+
+    .toolbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:14px;
+    }
+
+    .toolbarLeft{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .count{
+      display:inline-flex;
+      align-items:center;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: rgba(232,238,255,.95);
+      font-weight:950;
+      font-size:13px;
+      white-space:nowrap;
+    }
+
+    /* Group tabs */
+    .groupTabs{
+      display:none;
+      gap:10px;
+      flex-wrap:wrap;
+      margin: 6px 0 14px 0;
+    }
+    .tab{
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      cursor:pointer;
+      font-size:13px;
+      font-weight:950;
+    }
+    .tab.active{
+      background: rgba(255,255,255,.16);
+      border-color: rgba(255,255,255,.26);
+    }
+
+    /* ===== Sticky area (PCはそのまま固定) ===== */
+    .mainTop{
+      position: sticky;
+      top: 84px;
+      z-index: 15;
+
+      background: linear-gradient(180deg, rgba(16,27,58,.92), rgba(16,27,58,.70));
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding:12px;
+
+      margin-bottom:14px;
+    }
+
+    /* ===== Mobile chips (透明チップ) ===== */
+    .mobileChips{
+      display:none;
+      position:fixed;
+      top:80px;
+      left:12px;
+      z-index:30;
+      gap:10px;
+      flex-direction:column;
+    }
+
+    @media (max-width: 900px){
+      .mobileChips{ display:flex; }
+    }
+
+    .chipBtn{
+      display:inline-flex;
+      align-items:center;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: rgba(232,238,255,.95);
+      font-weight:950;
+      cursor:pointer;
+      font-size:13px;
+      white-space:nowrap;
+    }
+
+    /* PCでは非表示（スマホだけ表示） */
+    #mobileSearchChip, #mobileGroupChip{ display:none; }
+
+    @media (max-width: 900px){
+      #mobileSearchChip, #mobileGroupChip{ display:inline-flex; }
+    }
+
+    /* ===== Sheets（枠）共通 ===== */
+    .sheetOverlay{
+      display:none;
+      position:fixed;
+      inset:0;
+      z-index:997;
+      background:rgba(0,0,0,.55);
+      backdrop-filter: blur(4px);
+    }
+
+    body.searchOpen #searchSheetOverlay{ display:block; }
+
+    /* スマホ：検索/グループ枠が開いている間は背景（企業カード側）をスクロールさせない */
+    body.searchOpen,
+    body.groupOpen{
+      overflow:hidden;
+    }
+
+    body.groupOpen  #groupSheetOverlay{ display:flex; }
+
+    #groupSheetOverlay{
+      align-items:center;
+      justify-content:center;
+      padding:80px 18px 18px;
+    }
+
+    .sheetPanel{
+      width:100%;
+      height:100%;
+      background:rgba(15,23,48,.92);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      overflow:auto;
+      position:relative;
+      padding:18px;
+      padding-top:60px;
+    }
+
+    .sheetClose{
+      position:absolute;
+      top:14px;
+      right:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+      font-weight:950;
+      cursor:pointer;
+    }
+
+    /* スマホ：閉じるボタンをスクロール追従（固定） */
+    @media (max-width: 900px){
+      body.searchOpen #searchCloseBtn{
+        position: fixed !important;
+        top: 15px !important;
+        right: 10px !important;
+        z-index: 1000 !important;
+        display: inline-flex !important;
+      }
+      body.groupOpen #groupCloseBtn{
+        position: fixed;
+        top: 88px;
+        right: 26px;
+        z-index: 999;
+      }
+
+      /* スマホの検索枠（検索チップで開く）では「適用」「クリア」を左上に固定 */
+      body.searchOpen .rowBtn{
+        position: fixed;
+        top: 15px;
+        left: 10px;
+        z-index: 999;
+        margin-top: 0;
+      }
+    }
+
+    /* グループ枠内ではタブを強制表示 */
+    #groupTabsHolder #groupTabs{
+      display:flex !important;
+    }
+
+    /* ★④ 幅いっぱいにカードが広がるよう自動詰め */
+    .companies{
+      display:grid;
+      grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+      gap:14px;
+    }
+
+    @media (max-width: 900px){
+      .layout{ grid-template-columns: 1fr; }
+
+      /* スマホでは sidebar を普段は隠す（検索チップで開く） */
+      .sidebar{ display:none; }
+
+      body.searchOpen .sidebar{
+        display:block;
+        position:fixed;
+        top:80px;
+        left:18px;
+        right:18px;
+        bottom:18px;
+        height:auto;
+        z-index:998;
+        border-right:none;
+        border-radius:18px;
+        overflow:auto;
+        padding-top:52px;
+      }
+
+      /* 件数だけ残す */
+      #activeGroupText{ display:none; }
+
+      /* グループタブはスマホ本体では非表示（グループ枠で表示） */
+      .groupTabs{ display:none !important; }
+
+      .companies{ grid-template-columns: 1fr; }
+
+      /* チップが件数に被りやすいので少し右にずらす（件数を見えるようにする） */
+      .toolbar{ justify-content:flex-start; }
+
+      /* ▼スマホだけ：上部（件数・検索・グループ）の縦幅を少し圧縮してカードの見える面積を増やす */
+      .mainTop{ 
+        top: 104px;   /* ←ヘッダーとくっつかないための余白 */
+        padding:8px; 
+      }
+      .toolbar{ margin-bottom:10px; }
+      .count{ padding:8px 10px; }
+      .chipBtn{ padding:8px 10px; }
+    }
+
+    /* スマホ：件数=左、検索=中央、グループ=右 */
+    .toolbarLeft{
+      width:100%;
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap:0;
+    }
+    #countText{ justify-self:start; }
+    #mobileSearchChip{ justify-self:center; }
+    #mobileGroupChip{ justify-self:end; }
+
+    .card{
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.22);
+      background: linear-gradient(180deg, rgba(14,22,47,.92), rgba(11,19,42,.88));
+      box-shadow: 0 14px 32px rgba(0,0,0,.32);
+      padding:16px;
+      overflow:hidden;
+      position:relative;
+    }
+    .card:before{
+      content:'';
+      position:absolute; inset:-1px;
+      background: radial-gradient(800px 220px at 20% 0%, rgba(111,177,252,.18), transparent 55%),
+                  radial-gradient(800px 220px at 80% 0%, rgba(247,147,255,.14), transparent 55%);
+      pointer-events:none;
+    }
+    .card > *{ position:relative; }
+
+    .cardTop{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+
+    .companyName{
+      font-weight: 950;
+      letter-spacing:.01em;
+      font-size: 22px;
+      line-height:1.2;
+    }
+
+    .badge{
+      font-size:13px;
+      font-weight:950;
+      color: rgba(232,238,255,.95);
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.08);
+      padding:8px 10px;
+      border-radius: 999px;
+      white-space:nowrap;
+    }
+
+    @media (min-width: 901px){
+      .badge{
+        font-size:15px;
+        padding:10px 14px;
+      }
+    }
+
+    .meta{
+      display:grid;
+      grid-template-columns: 130px 1fr;
+      gap:10px 12px;
+      flex:1;
+      min-width:0;
+    }
+    /* メタ情報（左）＋写真（右） */
+    .metaWrap{
+      display:flex;
+      gap:14px;
+      align-items:flex-start;
+      padding-top:10px;
+      border-top: 1px solid rgba(255,255,255,.12);
+    }
+    .photoWrap{
+      width:120px;
+      flex:0 0 auto;
+    }
+
+    /* スマホだけ写真位置を下へ */
+    .photoWrapDesktop{ display:block; }
+    .photoWrapMobile{ display:none; }
+
+    @media (max-width: 900px){
+    .photoWrapDesktop{ display:none; }
+
+    /* スマホ用：チップと写真の間に余白＋横幅いっぱいに */
+    .photoWrapMobile{
+      display:block;
+      width:100%;
+      margin-top:12px;
+    }
+
+    /* スマホ用：写真を正方形で横幅いっぱい（縦＝横） */
+    .photoWrapMobile .profilePhoto{
+      width:100%;
+      height:auto;
+      aspect-ratio: 1 / 1;
+    }
+  }
+    .profilePhoto{
+      width:120px;
+      height:120px;
+      border-radius: 14px;
+      object-fit:contain;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.06);
+      display:block;
+    }
+    .k{
+      color: var(--muted);
+      font-weight: 950;
+      font-size: 13px;
+      letter-spacing:.03em;
+    }
+    .v{
+      font-weight: 900;
+      font-size: 15px; /* ★③ */
+      line-height:1.45;
+      word-break: break-word;
+    }
+
+    .chips{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+    .chipLink{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.18);
+      text-decoration:none;
+      font-weight: 950;
+      font-size: 13px;
+      color: var(--text);
+      background: rgba(255,255,255,.07);
+    }
+    .chipLink:hover{ background: rgba(255,255,255,.14); }
+
+    .dot{
+      width:9px; height:9px; border-radius:999px;
+    }
+
+    /* ホームページ：緑 */
+    .dotHp{
+      background: rgba(68,214,116,.9);
+      box-shadow: 0 0 18px rgba(68,214,116,.45);
+    }
+
+    /* 指針書：オレンジ */
+    .dotGuideline{
+      background: rgba(255,153,0,.9);
+      box-shadow: 0 0 18px rgba(255,153,0,.45);
+    }
+
+    /* Instagram：ピンク */
+    .dotIg{
+      background: rgba(247,147,255,.9);
+      box-shadow: 0 0 18px rgba(247,147,255,.45);
+    }
+
+    /* TikTok：黒 */
+    .dotTikTok{
+      background: rgba(0,0,0,.95);
+      box-shadow: 0 0 18px rgba(0,0,0,.35);
+    }
+
+    /* Facebook：青 */
+    .dotFb{
+      background: rgba(111,177,252,9);
+      box-shadow: 0 0 18px rgba(111,177,252,45);
+    }
+
+    /* X：水色 */
+    .dotX{
+      background: rgba(80,210,255,9);
+      box-shadow: 0 0 18px rgba(80,210,255,45);
+    }
+
+    /* YouTube：赤 */
+    .dotYt{
+      background: rgba(255,59,48,9);
+      box-shadow: 0 0 18px rgba(255,59,48,45);
+    }
+
+    /* ===== Modal（企業カードクリックで開く詳細） ===== */
+    .modalOverlay{
+      position:fixed; inset:0; z-index:998;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(4px);
+      display:none;
+      align-items:center; justify-content:center;
+      padding:16px; /* 少し余白 */
+    }
+    .modalPanel{
+      width: calc(100vw - 32px);
+      height: calc(100vh - 32px);
+      background: rgba(15,23,48,.92);
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      position:relative;
+      overflow:auto;
+      padding:18px;
+      padding-top:60px;
+    }
+
+    .modalTitle{
+      position: fixed;
+      top: 30px;
+      left: 30px;
+      z-index: 999;
+
+      border:1px solid var(--line);
+      background: rgba(15,23,48,.92);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+
+      font-weight:950;
+      font-size:14px;
+      max-width: calc(100vw - 32px - 30px - 30px - 90px);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .modalClose{
+      position: fixed;
+      top: 30px;
+      right: 30px;
+      z-index: 999;
+
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+      cursor:pointer;
+      font-weight:950;
+      font-size:14px;
+    }
+
+    .modalClose:hover{ background: rgba(255,255,255,.10); }
+
+    /* ===== Photo Modal（PCのみ：写真クリックで拡大） ===== */
+    @media (min-width: 901px){
+      .photoModalOverlay{
+        position:fixed; inset:0; z-index:1001;
+        background: rgba(0,0,0,.55);
+        backdrop-filter: blur(4px);
+        display:none;
+        align-items:center; justify-content:center;
+        padding:36px; /* ★① 上下左右＝36px（360°余白） */
+      }
+      .photoModalImg{
+        max-width: calc(100vw - 72px);
+        max-height: calc(100vh - 72px);
+        width:auto;
+        height:auto;
+        border-radius: 18px;
+        object-fit: contain;
+        border: 1px solid rgba(255,255,255,.18);
+        background: rgba(255,255,255,.06);
+        display:block;
+      }
+    }
+
+    .modalSection{ margin-top:12px; }
+
+    /* 数字系（従業員数/入会年度/創業/設立）をまとめて並べる */
+    .modalGridNums{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap:12px;
+    }
+    .modalStat{
+      padding:14px 14px;
+      border-radius: 18px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+    }
+    .modalStat .t{
+      color: var(--muted);
+      font-weight: 950;
+      font-size: 13px;
+      letter-spacing:.03em;
+      margin-bottom:6px;
+    }
+    .modalStat .d{
+      font-weight:900;
+      font-size:15px;
+      line-height:1.45;
+      word-break: break-word;
+    }
+
+    /* それ以外の項目 */
+    .modalGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      margin-top:12px;
+    }
+    .modalBlock{
+      padding:14px 14px;
+      border-radius: 18px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+    }
+    .modalBlock.full{ grid-column: 1 / -1; }
+    .modalBlock .t{
+      color: var(--muted);
+      font-weight: 950;
+      font-size: 13px;
+      letter-spacing:.03em;
+      margin-bottom:6px;
+    }
+    .modalBlock .d{
+      font-weight:900;
+      font-size:15px;
+      line-height:1.45;
+      word-break: break-word;
+    }
+
+    @media (max-width: 900px){
+      .modalGrid{ grid-template-columns: 1fr; }
+      .modalPanel{ padding:14px; padding-top:60px; }
+    }
+
+    /* Loading */
+    .overlay{
+      position:fixed; inset:0; z-index:999;
+      background: rgba(0,0,0,.45);
+      backdrop-filter: blur(4px);
+      display:none;
+      align-items:center; justify-content:center;
+    }
+    .loader{
+      background: rgba(15,23,48,.85);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:18px;
+      padding:16px 16px;
+      box-shadow: var(--shadow);
+      color: var(--text);
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font-weight:950;
+    }
+    .loader .t{ font-weight:950; font-size:16px; }
+    .loader .s{ color:var(--muted); font-weight:900; margin-top:8px; font-size:13px; }
+
+    /* ===== Login ===== */
+    body.loggedOut .layout{ display:none; }
+    body.loggedOut #loginOverlay{ display:flex; }
+
+    #loginOverlay{
+      position:fixed;
+      inset:0;
+      z-index:9999;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background: radial-gradient(1200px 800px at 10% 0%, #1a2a5a 0%, rgba(26,42,90,0) 55%),
+                  radial-gradient(1200px 800px at 90% 10%, #3b1d5a 0%, rgba(59,29,90,0) 55%),
+                  rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+    }
+
+    .loginCard{
+      width:min(520px,92vw);
+      background: rgba(15,23,48,.92);
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius:18px;
+      box-shadow: var(--shadow);
+      padding:18px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      color: var(--text);
+    }
+
+    .loginTitle{
+      font-weight:950;
+      font-size:18px;
+      margin-bottom:10px;
+    }
+
+    .loginMsg{
+      color:var(--muted);
+      font-weight:800;
+      font-size:13px;
+      margin-top:10px;
+      min-height:18px;
+    }
+
+    .loginRow{
+      display:flex;
+      gap:10px;
+      margin-top:14px;
+    }
+
+    .loginRow .btn{
+      width:100%;
+    }
+
+    /* ===== Login Password Eye ===== */
+    .pwWrap{
+      position:relative;
+      width:100%;
+    }
+    #loginPw{
+      padding-right:46px; /* 右側の目玉分の余白 */
+    }
+    .pwToggle{
+      position:absolute;
+      right:12px;
+      top:50%;
+      transform: translateY(-50%);
+      border:none;
+      background: transparent;
+      color: var(--muted);
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      gap:6px;
+      font-weight:950;
+    }
+
+    .pwToggle .eye{
+      width:18px;
+      height:18px;
+      fill:none;
+      stroke: currentColor;
+      stroke-width:2;
+    }
+
+    /* 初期：閉じ目だけ表示 */
+    .pwToggle .eye-open{ display:none; }
+    .pwToggle.is-visible .eye-open{ display:block; }
+    .pwToggle.is-visible .eye-closed{ display:none; }
+  </style>
+</head>
+<body class="loggedOut">
+  <header>
+    <div class="topbar">
+      <div class="brand">
+        <!-- ★① 表示名変更 -->
+        <div class="title">角張会</div>
+      </div>
+      <div class="spacer"></div>
+        <div class="headerActions">
+          <button class="btn" id="loginScreenBtn">ログイン画面</button>
+          <button class="btn" id="termsBtn" type="button">約款</button>
+          <button class="btn" id="reloadBtn">再読み込み</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== Login Overlay ===== -->
+  <div id="loginOverlay">
+    <div class="loginCard">
+      <div class="loginTitle">ログイン</div>
+
+      <div class="field">
+        <label>ID</label>
+        <input id="loginId" placeholder="ID" autocomplete="username" />
+      </div>
+
+      <div class="field">
+        <label>パスワード</label>
+        <div class="pwWrap">
+          <input id="loginPw" type="password" placeholder="パスワード" autocomplete="current-password" />
+          <button type="button" class="pwToggle" id="pwToggleBtn" aria-label="パスワード表示切替" aria-pressed="false">
+            <!-- 閉じ目（初期表示） -->
+            <svg class="eye eye-closed" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path>
+              <circle cx="12" cy="12" r="2.5"></circle>
+              <path d="M4 4L20 20"></path>
+            </svg>
+
+            <!-- 開き目（クリックで表示） -->
+            <svg class="eye eye-open" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path>
+              <circle cx="12" cy="12" r="2.5"></circle>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="loginRow">
+        <button class="btn btnPrimary" id="loginBtn" type="button">ログイン</button>
+      </div>
+
+      <div class="loginMsg" id="loginMsg"></div>
+    </div>
+  </div>
+
+  <!-- Search sheet backdrop (panel is the sidebar itself) -->
+  <div class="sheetOverlay" id="searchSheetOverlay"></div>
+
+  <!-- Group sheet -->
+  <div class="sheetOverlay" id="groupSheetOverlay">
+    <div class="sheetPanel" id="groupSheetPanel">
+      <button class="sheetClose" id="groupCloseBtn" type="button">閉じる</button>
+      <div id="groupTabsHolder"></div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <button class="sheetClose" id="searchCloseBtn" type="button">閉じる</button>
+      <div class="sec-title">検索</div>
+
+      <div class="field">
+        <label>企業名</label>
+        <input id="qCompany" placeholder="例：〇〇株式会社" />
+      </div>
+      <div class="field">
+        <label>氏名</label>
+        <input id="qPerson" placeholder="例：佐藤" />
+      </div>
+      <div class="field">
+        <label>紹介者</label>
+        <input id="qIntroducer" placeholder="例：田中" />
+      </div>
+
+      <div class="sec-title">並び替え</div>
+      <div class="row2">
+        <div class="field">
+          <label>並び順</label>
+          <select id="sortField">
+            <option value="joinYear">入会年度</option>
+            <option value="employeeCount">従業員数</option>
+            <option value="founderType">創業or後継</option>
+            <option value="founded">創業</option>
+            <option value="established">設立</option>
+            <option value="age">年齢</option>
+            <option value="industry">業種</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>昇順/降順</label>
+          <select id="sortDir">
+            <option value="asc">昇順</option>
+            <option value="desc">降順</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="sec-title">グループ</div>
+      <div class="field">
+        <label>グループ分け</label>
+        <select id="groupBy">
+          <option value="none">なし</option>
+          <option value="joinYear">入会年度</option>
+          <option value="employeeCount">従業員数</option>
+          <option value="founderType">創業or後継</option>
+          <option value="founded">創業</option>
+          <option value="established">設立</option>
+          <option value="age">年齢</option>
+          <option value="industry">業種</option>
+        </select>
+      </div>
+
+      <div class="rowBtn">
+        <button class="btn btnPrimary" id="applyBtn">適用</button>
+        <button class="btn" id="clearBtn">クリア</button>
+      </div>
+      
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <div class="mainTop" id="mainTop">
+
+        <div class="toolbar">
+          <div class="toolbarLeft" id="toolbarLeft">
+            <div class="count" id="countText">0件</div>
+            <button class="chipBtn" id="mobileSearchChip" type="button">検索</button>
+            <button class="chipBtn" id="mobileGroupChip" type="button">グループ</button>
+          </div>
+          <div class="activeGroup" id="activeGroupText"></div>
+        </div>
+
+        <div id="groupTabsBack">
+          <div class="groupTabs" id="groupTabs"></div>
+        </div>
+      </div>
+
+      <div class="companies" id="companies"></div>
+    </main>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="loader">
+      <div class="t">読み込み中…</div>
+    </div>
+  </div>
+
+  <div class="modalOverlay" id="modalOverlay">
+    <div class="modalPanel" id="modalPanel">
+      <div class="modalTitle" id="modalTitle"></div>
+      <button class="modalClose" id="modalCloseBtn" type="button">閉じる</button>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- ★① 写真拡大（PCのみ） -->
+  <div class="photoModalOverlay" id="photoModalOverlay">
+    <img class="photoModalImg" id="photoModalImg" src="" alt="">
+  </div>
+
+  <script>
+    let ALL = [];
+    let VIEW = [];
+    let GROUPS = {};
+    let ACTIVE_GROUP = '__all';
+
+    // ★⑤★⑥ 初期値：グループ=入会年度 / 並び順=入会年度 降順
+    const DEFAULTS = {
+      sortField: 'joinYear',
+      sortDir: 'desc',
+      groupBy: 'joinYear',
+      qCompany: '',
+      qPerson: '',
+      qIntroducer: ''
+    };
+
+    const norm = (s) => (s ?? '').toString().toLowerCase().replace(/\s+/g,'').trim();
+
+    // 生年月日→年齢（形式ゆれ対応）
+    function toHalfWidthDigits_(s){
+      return (s ?? '').toString().replace(/[０-９]/g, ch =>
+        String.fromCharCode(ch.charCodeAt(0) - 0xFF10 + 0x30)
+      );
+    }
+
+    function parseBirthDate_(raw){
+      let t = toHalfWidthDigits_(raw).trim();
+      if (!t) return null;
+
+      t = t.replace(/[　\s]/g,'');        // 空白除去
+      t = t.replace(/[.\-]/g,'/');        // "." "-" を "/"
+      t = t.replace(/年/g,'/').replace(/月/g,'/').replace(/日/g,''); // "1990年5月17日"系
+      t = t.replace(/\/+/g,'/').replace(/^\/|\/$/g,''); // "/"整形
+
+      const digits = t.replace(/\D/g,''); // 数字だけ
+      let y, m, d;
+
+      // 例：19900517 / １９９７１２０８ など
+      if (/^\d{8}$/.test(digits)){
+        y = digits.slice(0,4);
+        m = digits.slice(4,6);
+        d = digits.slice(6,8);
+
+      // 例：1991/12/7, 1990/5/17, 1999/0513 など
+      } else if (t.includes('/')){
+        const parts = t.split('/').filter(Boolean);
+
+        if (parts.length === 3){
+          [y, m, d] = parts;
+
+        } else if (parts.length === 2){
+          // 例：1999/0513 → 1999/05/13
+          y = parts[0];
+          const md = parts[1].replace(/\D/g,'');
+
+          if (md.length === 4){
+            m = md.slice(0,2);
+            d = md.slice(2,4);
+          } else if (md.length === 3){
+            // 例：1990/517 → 1990/5/17（想定）
+            m = md.slice(0,1);
+            d = md.slice(1,3);
+          } else {
+            return null;
+          }
+
+        } else {
+          return null;
+        }
+
+      } else {
+        return null;
+      }
+
+      const yy = Number(y), mm = Number(m), dd = Number(d);
+      if (!Number.isFinite(yy) || !Number.isFinite(mm) || !Number.isFinite(dd)) return null;
+
+      const dt = new Date(yy, mm - 1, dd);
+      // JSの自動繰り上げを弾く（例：1990/13/40 → 無効）
+      if (dt.getFullYear() !== yy || dt.getMonth() !== (mm - 1) || dt.getDate() !== dd) return null;
+
+      return dt;
+    }
+
+    function calcAge_(birthDate, today){
+      const t = today || new Date();
+      let age = t.getFullYear() - birthDate.getFullYear();
+      const m = t.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && t.getDate() < birthDate.getDate())) age--;
+      return age;
+    }
+
+    function ageBadgeFromBirth_(birthRaw){
+      const bd = parseBirthDate_(birthRaw);
+      if (!bd) return '年齢：未入力';
+
+      const age = calcAge_(bd, new Date());
+      if (!Number.isFinite(age) || age < 0 || age > 130) return '年齢：未入力';
+
+      return `${age}歳`;
+    }
+
+    // ===== ソート/グループ用：数値化ヘルパー =====
+    function extractFirstInt_(raw){
+      const s = toHalfWidthDigits_(raw).toString();
+      const m = s.match(/\d+/);
+      return m ? Number(m[0]) : null;
+    }
+
+    function employeeCountNum_(x){
+      const n = extractFirstInt_(x?.employeeCount);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function yearFromText_(raw){
+      const s = toHalfWidthDigits_(raw).toString();
+      const m = s.match(/(19|20)\d{2}/);
+      if (!m) return null;
+      const y = Number(m[0]);
+      return Number.isFinite(y) ? y : null;
+    }
+
+    function foundedYear_(x){
+      return yearFromText_(x?.founded);
+    }
+
+    function establishedYear_(x){
+      return yearFromText_(x?.established);
+    }
+
+    function ageNumFromBirth_(birthRaw){
+      const bd = parseBirthDate_(birthRaw);
+      if (!bd) return null;
+
+      const age = calcAge_(bd, new Date());
+      if (!Number.isFinite(age) || age < 0 || age > 130) return null;
+
+      return age;
+    }
+
+    function showLoading(on){
+      document.getElementById('overlay').style.display = on ? 'flex' : 'none';
+    }
+
+    // ===== 企業カードクリック時の詳細表示（モーダル） =====
+    function vOrEmpty_(v){
+      const s = (v ?? '').toString().trim();
+      return s ? s : '未入力';
+    }
+
+    function joinYearLabel_(x){
+      if (x?.joinYear != null && x.joinYear !== '') return `${x.joinYear}年`;
+      const raw = (x?.joinYearRaw ?? '').toString().trim();
+      return raw || '未入力';
+    }
+
+    function buildCompanyModalHtml_(x){
+      // 数字系（まとめて並べる）
+      const nums = `
+        <div class="modalGridNums">
+          <div class="modalStat"><div class="t">従業員数</div><div class="d">${escapeHtml(vOrEmpty_(x.employeeCount))}</div></div>
+          <div class="modalStat"><div class="t">入会年度</div><div class="d">${escapeHtml(joinYearLabel_(x))}</div></div>
+          <div class="modalStat"><div class="t">創業</div><div class="d">${escapeHtml(vOrEmpty_(x.founded))}</div></div>
+          <div class="modalStat"><div class="t">設立</div><div class="d">${escapeHtml(vOrEmpty_(x.established))}</div></div>
+        </div>
+      `;
+
+      // それ以外（タイトル付きで表示）
+      const rest = `
+        <div class="modalGrid">
+          <div class="modalBlock"><div class="t">趣味</div><div class="d">${escapeHtml(vOrEmpty_(x.hobby))}</div></div>
+          <div class="modalBlock"><div class="t">取引先の業種</div><div class="d">${escapeHtml(vOrEmpty_(x.partnerFishType))}</div></div>
+
+          <div class="modalBlock full"><div class="t">取扱業務</div><div class="d">${escapeHtml(vOrEmpty_(x.workDetail))}</div></div>
+          <div class="modalBlock full"><div class="t">強み・PR</div><div class="d">${escapeHtml(vOrEmpty_(x.prText))}</div></div>
+          <div class="modalBlock full"><div class="t">理念</div><div class="d">${escapeHtml(vOrEmpty_(x.philosophy))}</div></div>
+          <div class="modalBlock full"><div class="t">入会理由</div><div class="d">${escapeHtml(vOrEmpty_(x.joinReason))}</div></div>
+        </div>
+      `;
+
+      return `<div class="modalSection">${nums}</div><div class="modalSection">${rest}</div>`;
+    }
+
+    function openCompanyModal_(x){
+      document.getElementById('modalTitle').textContent = (x && x.company) ? x.company : '';
+      document.getElementById('modalBody').innerHTML = buildCompanyModalHtml_(x);
+      document.getElementById('modalOverlay').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeCompanyModal_(){
+      document.getElementById('modalOverlay').style.display = 'none';
+      document.getElementById('modalBody').innerHTML = '';
+      document.getElementById('modalTitle').textContent = '';
+      document.body.style.overflow = '';
+    }
+
+    function openPhotoModal_(url, altText){
+      if (!window.matchMedia('(min-width: 901px)').matches) return; // PCのみ
+      const ov = document.getElementById('photoModalOverlay');
+      const img = document.getElementById('photoModalImg');
+      if (!ov || !img) return;
+
+      img.src = url || '';
+      img.alt = altText || '写真';
+      ov.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closePhotoModal_(){
+      const ov = document.getElementById('photoModalOverlay');
+      const img = document.getElementById('photoModalImg');
+      if (ov) ov.style.display = 'none';
+      if (img){ img.src = ''; img.alt = ''; }
+      document.body.style.overflow = '';
+    }
+
+    function setUpdatedAt(iso){
+      const el = document.getElementById('updatedAt');
+      if (!el) return; // ← updatedAt表示を消したので、要素が無ければ何もしない
+      const d = iso ? new Date(iso) : null;
+      el.textContent = d ? `更新：${d.toLocaleString('ja-JP')}` : '';
+    }
+
+    function getFilters(){
+      return {
+        qCompany: document.getElementById('qCompany').value || '',
+        qPerson: document.getElementById('qPerson').value || '',
+        qIntroducer: document.getElementById('qIntroducer').value || '',
+        sortField: document.getElementById('sortField').value,
+        sortDir: document.getElementById('sortDir').value,
+        groupBy: document.getElementById('groupBy').value
+      };
+    }
+
+    function applyAll(){
+      const f = getFilters();
+
+      const qc = norm(f.qCompany);
+      const qp = norm(f.qPerson);
+      const qi = norm(f.qIntroducer);
+
+      let items = ALL.filter(x => {
+        const c = norm(x.company);
+        const p = norm(x.person);
+        const i = norm(x.introducer);
+        if (qc && !c.includes(qc)) return false;
+        if (qp && !p.includes(qp)) return false;
+        if (qi && !i.includes(qi)) return false;
+        return true;
+      });
+
+      items.sort((a,b)=> compareBy(a,b,f.sortField,f.sortDir));
+      VIEW = items;
+
+      buildGroups(f.groupBy);
+      render(f.groupBy);
+    }
+
+    function compareBy(a,b,field,dir){
+      const mul = (dir === 'desc') ? -1 : 1;
+
+      if (field === 'joinYear'){
+        const av = (a.joinYear == null) ? 999999 : a.joinYear;
+        const bv = (b.joinYear == null) ? 999999 : b.joinYear;
+        if (av === bv) return (a.company||'').localeCompare(b.company||'', 'ja') * mul;
+        return (av - bv) * mul;
+      }
+
+      if (field === 'employeeCount'){
+        const av = employeeCountNum_(a);
+        const bv = employeeCountNum_(b);
+        const an = (av == null) ? 999999 : av;
+        const bn = (bv == null) ? 999999 : bv;
+        if (an === bn) return (a.company||'').localeCompare(b.company||'', 'ja') * mul;
+        return (an - bn) * mul;
+      }
+
+      if (field === 'founded'){
+        const av = foundedYear_(a);
+        const bv = foundedYear_(b);
+        const an = (av == null) ? 999999 : av;
+        const bn = (bv == null) ? 999999 : bv;
+        if (an === bn) return (a.company||'').localeCompare(b.company||'', 'ja') * mul;
+        return (an - bn) * mul;
+      }
+
+      if (field === 'established'){
+        const av = establishedYear_(a);
+        const bv = establishedYear_(b);
+        const an = (av == null) ? 999999 : av;
+        const bn = (bv == null) ? 999999 : bv;
+        if (an === bn) return (a.company||'').localeCompare(b.company||'', 'ja') * mul;
+        return (an - bn) * mul;
+      }
+
+      if (field === 'age'){
+        const av = ageNumFromBirth_(a.birthDateRaw);
+        const bv = ageNumFromBirth_(b.birthDateRaw);
+        const an = (av == null) ? 999999 : av;
+        const bn = (bv == null) ? 999999 : bv;
+        if (an === bn) return (a.company||'').localeCompare(b.company||'', 'ja') * mul;
+        return (an - bn) * mul;
+      }
+
+      const av = (a[field] ?? '').toString();
+      const bv = (b[field] ?? '').toString();
+      const c = av.localeCompare(bv, 'ja');
+      if (c !== 0) return c * mul;
+
+      const cy = ((a.joinYear ?? 999999) - (b.joinYear ?? 999999));
+      if (cy !== 0) return cy;
+      return (a.company||'').localeCompare(b.company||'', 'ja');
+    }
+
+    // ★⑤ 入会年度のグルーピング対応（2023年 表示に統一）
+    function buildGroups(groupBy){
+      GROUPS = {};
+      ACTIVE_GROUP = '__all';
+
+      const tabs = document.getElementById('groupTabs');
+
+      if (groupBy === 'none'){
+        tabs.style.display = 'none';
+        tabs.innerHTML = '';
+        document.getElementById('activeGroupText').textContent = '';
+        return;
+      }
+
+      for (const item of VIEW){
+        let key = '';
+
+        if (groupBy === 'joinYear'){
+          key = (item.joinYear != null) ? `${item.joinYear}年` : '（未入力）';
+
+        } else if (groupBy === 'employeeCount'){
+          const n = employeeCountNum_(item);
+          key = (n == null) ? '（未入力）' : `${n}人`;
+
+        } else if (groupBy === 'founded'){
+          const y = foundedYear_(item);
+          key = (y == null) ? '（未入力）' : `${y}年`;
+
+        } else if (groupBy === 'established'){
+          const y = establishedYear_(item);
+          key = (y == null) ? '（未入力）' : `${y}年`;
+
+        } else if (groupBy === 'age'){
+          const age = ageNumFromBirth_(item.birthDateRaw);
+          key = (age == null) ? '（未入力）' : `${age}歳`;
+
+        } else {
+          key = (item[groupBy] ?? '').toString().trim() || '（未入力）';
+        }
+
+        if (!GROUPS[key]) GROUPS[key] = [];
+        GROUPS[key].push(item);
+      }
+
+      let keys = Object.keys(GROUPS);
+
+      // 年系（入会年度/創業/設立）は年の降順（未入力は最後）
+        if (groupBy === 'joinYear' || groupBy === 'founded' || groupBy === 'established'){
+          keys.sort((a,b)=>{
+            const ay = parseInt(a,10);
+            const by = parseInt(b,10);
+            const an = Number.isFinite(ay) ? ay : -1;
+            const bn = Number.isFinite(by) ? by : -1;
+            return bn - an;
+          });
+
+        // 数字系（従業員数/年齢）は数の昇順（未入力は最後）
+        } else if (groupBy === 'employeeCount' || groupBy === 'age'){
+          keys.sort((a,b)=>{
+            const av = parseInt(a,10);
+            const bv = parseInt(b,10);
+            const an = Number.isFinite(av) ? av : Infinity;
+            const bn = Number.isFinite(bv) ? bv : Infinity;
+            if (an === bn) return a.localeCompare(b,'ja');
+            return an - bn;
+          });
+
+        } else {
+          keys.sort((a,b)=>a.localeCompare(b,'ja'));
+        }
+
+      tabs.innerHTML = '';
+      tabs.appendChild(makeTab('すべて', '__all', VIEW.length));
+
+      keys.forEach(k=>{
+        tabs.appendChild(makeTab(k, k, GROUPS[k].length));
+      });
+
+      tabs.style.display = 'flex';
+      setActiveTab('__all');
+      document.getElementById('activeGroupText').textContent = '';
+    }
+
+    function makeTab(label, key, count){
+      const el = document.createElement('div');
+      el.className = 'tab';
+      el.dataset.key = key;
+      el.textContent = `${label}（${count}）`;
+      el.onclick = () => {
+        ACTIVE_GROUP = key;
+        setActiveTab(key);
+        renderGrouped();
+      };
+      return el;
+    }
+
+    function setActiveTab(key){
+      document.querySelectorAll('.tab').forEach(t=>{
+        t.classList.toggle('active', t.dataset.key === key);
+      });
+    }
+
+    function render(groupBy){
+      document.getElementById('countText').textContent = `${VIEW.length}件`;
+      if (groupBy === 'none'){
+        renderCards(VIEW);
+      } else {
+        renderGrouped();
+      }
+    }
+
+    function renderGrouped(){
+      const groupBy = document.getElementById('groupBy').value;
+      if (groupBy === 'none'){
+        renderCards(VIEW);
+        return;
+      }
+
+      let items = VIEW;
+      let label = '';
+
+      if (ACTIVE_GROUP !== '__all'){
+        items = GROUPS[ACTIVE_GROUP] || [];
+        label = `表示中：${ACTIVE_GROUP}`;
+      } else {
+        label = '';
+      }
+
+      document.getElementById('activeGroupText').textContent = label;
+      renderCards(items);
+    }
+
+    function renderCards(items){
+      const wrap = document.getElementById('companies');
+      wrap.innerHTML = '';
+
+      if (!items.length){
+        wrap.innerHTML = `<div style="color:rgba(232,238,255,.8);font-weight:950;padding:12px;font-size:15px;">該当する企業がありません</div>`;
+        return;
+      }
+
+      const frag = document.createDocumentFragment();
+      items.forEach(x => frag.appendChild(makeCard(x)));
+      wrap.appendChild(frag);
+    }
+
+    function makeCard(x){
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      // 企業カードクリックで詳細表示
+      card.addEventListener('click', () => openCompanyModal_(x));
+
+      // 入会年度ではなく「生年月日→年齢」を表示
+      const ageBadge = ageBadgeFromBirth_(x.birthDateRaw);
+
+      const top = document.createElement('div');
+      top.className = 'cardTop';
+      top.innerHTML = `
+        <div class="companyName">${escapeHtml(x.company || '')}</div>
+        <div class="badge">${escapeHtml(ageBadge)}</div>
+      `;
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.innerHTML = `
+        <div class="k">氏名</div><div class="v">${escapeHtml(x.person || '')}</div>
+        <div class="k">創業or後継</div><div class="v">${escapeHtml(x.founderType || '')}</div>
+        <div class="k">業種</div><div class="v">${escapeHtml(x.industry || '')}</div>
+        <div class="k">紹介者</div><div class="v">${escapeHtml(x.introducer || '')}</div>
+      `;
+
+      // 左（meta）＋右（写真）を横並びにするラッパー
+      const metaWrap = document.createElement('div');
+      metaWrap.className = 'metaWrap';
+      metaWrap.appendChild(meta);
+
+      // 右側にプロフィール写真（あるときだけ）
+      // PC用（右側）とスマホ用（下）を分ける
+      let photoWrapMobileEl = null;
+
+      if (x.profilePhotoUrl){
+        // --- PC用：右側に表示（従来位置） ---
+        const photoWrapDesktop = document.createElement('div');
+        photoWrapDesktop.className = 'photoWrap photoWrapDesktop';
+
+        const imgDesktop = document.createElement('img');
+        imgDesktop.className = 'profilePhoto';
+        imgDesktop.src = x.profilePhotoUrl;
+        imgDesktop.alt = 'プロフィール写真';
+        imgDesktop.loading = 'lazy';
+
+        // ★PCのみ：写真クリックで拡大（カードクリックを止める）
+        imgDesktop.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openPhotoModal_(x.profilePhotoUrl, x.company || 'プロフィール写真');
+        });
+
+        photoWrapDesktop.appendChild(imgDesktop);
+        metaWrap.appendChild(photoWrapDesktop);
+
+        // --- スマホ用：チップ（ホームページ/指針書）の下に表示 ---
+        const photoWrapMobile = document.createElement('div');
+        photoWrapMobile.className = 'photoWrap photoWrapMobile';
+
+        const imgMobile = document.createElement('img');
+        imgMobile.className = 'profilePhoto';
+        imgMobile.src = x.profilePhotoUrl;
+        imgMobile.alt = 'プロフィール写真';
+        imgMobile.loading = 'lazy';
+
+        photoWrapMobile.appendChild(imgMobile);
+        photoWrapMobileEl = photoWrapMobile;
+      }
+
+      const chips = document.createElement('div');
+      chips.className = 'chips';
+
+      if (x.hpUrl){
+        chips.appendChild(makeChip('ホームページ', x.hpUrl, 'dotHp'));
+      }
+      if (x.guidelineUrl){
+        chips.appendChild(makeChip('指針書', x.guidelineUrl, 'dotGuideline'));
+      }
+      if (x.instagramUrl){
+        chips.appendChild(makeChip('Instagram', x.instagramUrl, 'dotIg'));
+      }
+      if (x.facebookUrl){
+        chips.appendChild(makeChip('Facebook', x.facebookUrl, 'dotFb'));
+      }
+      if (x.tiktokUrl){
+        chips.appendChild(makeChip('TikTok', x.tiktokUrl, 'dotTikTok'));
+      }
+      if (x.xUrl){
+        chips.appendChild(makeChip('X', x.xUrl, 'dotX'));
+      }
+      if (x.youtubeUrl){
+        chips.appendChild(makeChip('YouTube', x.youtubeUrl, 'dotYt'));
+      }
+
+      card.appendChild(top);
+      card.appendChild(metaWrap);
+      if (chips.childNodes.length) card.appendChild(chips);
+      if (photoWrapMobileEl) card.appendChild(photoWrapMobileEl);
+
+      return card;
+    }
+
+    function makeChip(label, url, dotClass){
+      const a = document.createElement('a');
+      a.className = 'chipLink';
+      a.href = url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+
+      // URLクリック時はカードクリック扱いにしない
+      a.addEventListener('click', (e) => e.stopPropagation());
+
+      a.innerHTML = `<span class="${dotClass} dot"></span>${escapeHtml(label)}`;
+      return a;
+    }
+
+    function escapeHtml(s){
+      return (s ?? '').toString()
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'","&#039;");
+    }
+
+    function setDefaults(){
+      document.getElementById('sortField').value = DEFAULTS.sortField;
+      document.getElementById('sortDir').value = DEFAULTS.sortDir;
+      document.getElementById('groupBy').value = DEFAULTS.groupBy;
+
+      document.getElementById('qCompany').value = DEFAULTS.qCompany;
+      document.getElementById('qPerson').value = DEFAULTS.qPerson;
+      document.getElementById('qIntroducer').value = DEFAULTS.qIntroducer;
+    }
+
+    function bindUI(){
+      // モーダル：右上の「閉じる」/ 余白クリックで閉じる（枠の中クリックは閉じない）
+      document.getElementById('modalCloseBtn').onclick = closeCompanyModal_;
+      document.getElementById('modalOverlay').onclick = closeCompanyModal_;
+      document.getElementById('modalPanel').onclick = (e) => e.stopPropagation();
+      document.getElementById('photoModalOverlay').onclick = closePhotoModal_;
+
+      document.getElementById('applyBtn').onclick = applyAll;
+
+      document.getElementById('clearBtn').onclick = () => {
+        setDefaults();
+        ACTIVE_GROUP = '__all';
+        applyAll();
+      };
+
+      document.getElementById('reloadBtn').onclick = () => loadData();
+
+      // ===== Password eye toggle (SVG) =====
+      document.getElementById('pwToggleBtn').onclick = () => {
+        const pw = document.getElementById('loginPw');
+        const btn = document.getElementById('pwToggleBtn');
+
+        const isHidden = (pw.type === 'password');
+        pw.type = isHidden ? 'text' : 'password';
+
+        btn.classList.toggle('is-visible', isHidden);
+        btn.setAttribute('aria-pressed', isHidden ? 'true' : 'false');
+      };
+
+      document.getElementById('loginScreenBtn').onclick = () => {
+        document.body.classList.add('loggedOut');      // ログイン画面に戻す
+        document.getElementById('loginId').value = ''; // 入力をクリア
+        document.getElementById('loginPw').value = '';
+        document.getElementById('loginMsg').textContent = '';
+      };
+
+      //「約款」ボタンでURLを開く
+      document.getElementById('termsBtn').onclick = () => {
+        window.open(
+          'https://drive.google.com/file/d/1QWKyNnSwanYYC9JNuIiLouIu4IuRbxqr/view?usp=sharing',
+          '_blank',
+          'noopener'
+        );
+      };
+
+      ['qCompany','qPerson','qIntroducer','sortField','sortDir','groupBy'].forEach(id=>{
+        document.getElementById(id).addEventListener('input', ()=>{
+          if (id === 'groupBy') ACTIVE_GROUP = '__all';
+          applyAll();
+        });
+        document.getElementById(id).addEventListener('change', ()=>{
+          if (id === 'groupBy') ACTIVE_GROUP = '__all';
+          applyAll();
+        });
+      });
+
+      // ===== Mobile: Search / Group sheets =====
+      const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
+
+      const openSearch = () => {
+        if (!isMobile()) return;
+        document.body.classList.add('searchOpen');
+        document.body.classList.remove('groupOpen');
+      };
+      const closeSearch = () => {
+        document.body.classList.remove('searchOpen');
+      };
+      const toggleSearch = () => {
+        if (document.body.classList.contains('searchOpen')) closeSearch();
+        else openSearch();
+      };
+
+      const openGroup = () => {
+        if (!isMobile()) return;
+        document.body.classList.add('groupOpen');
+        document.body.classList.remove('searchOpen');
+
+        const tabs = document.getElementById('groupTabs');
+        const holder = document.getElementById('groupTabsHolder');
+        if (tabs && holder && tabs.parentElement !== holder){
+          holder.appendChild(tabs);
+        }
+      };
+      const closeGroup = () => {
+        document.body.classList.remove('groupOpen');
+
+        const tabs = document.getElementById('groupTabs');
+        const back = document.getElementById('groupTabsBack');
+        if (tabs && back && tabs.parentElement !== back){
+          back.appendChild(tabs);
+        }
+      };
+      const toggleGroup = () => {
+        if (document.body.classList.contains('groupOpen')) closeGroup();
+        else openGroup();
+      };
+
+      document.getElementById('mobileSearchChip').onclick = toggleSearch;
+      document.getElementById('searchCloseBtn').onclick = closeSearch;
+      document.getElementById('searchSheetOverlay').onclick = closeSearch;
+
+      document.getElementById('mobileGroupChip').onclick = toggleGroup;
+      document.getElementById('groupCloseBtn').onclick = closeGroup;
+      document.getElementById('groupSheetOverlay').onclick = closeGroup;
+      document.getElementById('groupSheetPanel').onclick = (e) => e.stopPropagation();
+
+      // 画面がPC幅に戻った時、グループタブが戻らない事故防止
+      window.addEventListener('resize', () => {
+        if (!isMobile()){
+          closeSearch();
+          closeGroup();
+        }
+      });
+    }
+
+    function loadData(){
+      showLoading(true);
+      google.script.run
+        .withSuccessHandler(res=>{
+          showLoading(false);
+          setUpdatedAt(res.updatedAt);
+          ALL = res.companies || [];
+
+          setDefaults();
+          applyAll();
+        })
+        .withFailureHandler(err=>{
+          showLoading(false);
+          alert('データ取得でエラー：' + (err?.message || err));
+        })
+        .getCompanies();
+    }
+
+    function setLoginMsg_(s){
+      document.getElementById('loginMsg').textContent = s || '';
+    }
+
+    function tryLogin_(){
+      const id = (document.getElementById('loginId').value || '').trim();
+      const pw = (document.getElementById('loginPw').value || '').trim();
+
+      if (!id || !pw){
+        setLoginMsg_('IDとパスワードを入力してください。');
+        google.script.run.logLoginAttempt(id, pw, '失敗');
+        return;
+      }
+
+      // ALL の中に一致する行があるか（ID/PW一致の“行”を取る）
+      const hit = (ALL || []).find(x =>
+        (x?.idolId || '').toString().trim() === id &&
+        (x?.password || '').toString().trim() === pw
+      );
+
+      if (!hit){
+        setLoginMsg_('IDまたはパスワードが違います。');
+        google.script.run.logLoginAttempt(id, pw, '失敗');
+        return;
+      }
+
+      // ★2段階認証（AF列チェック）ON以外はログイン不可
+      if (!hit.twoFactorOk){
+        setLoginMsg_('このIDはまだ承認されていません。運営側の許可後にログインできます。');
+        google.script.run.logLoginAttempt(id, pw, '失敗');
+        return;
+      }
+
+      // ログイン成功：名簿画面を表示
+      google.script.run.logLoginAttempt(id, pw, '成功');
+      document.body.classList.remove('loggedOut');
+      setLoginMsg_('');
+    }
+
+    document.getElementById('loginBtn').onclick = tryLogin_;
+    document.getElementById('loginPw').addEventListener('keydown', (e)=>{
+      if (e.key === 'Enter') tryLogin_();
+    });
+
+    bindUI();
+    loadData();
+  </script>
+</body>
+</html>
