@@ -4,11 +4,14 @@
 # GAS Webアプリ：角張会_会員管理
 
 ## URL
-- Webアプリ：https://script.google.com/macros/s/AKfycbwcaK44Cf0jgGRvypCDqnpsfT1SLaf7zrJY9vgi-LMu875JAYnpFBpd5mcCAqF6cE0A/exec
+- Webアプリ：
+https://script.google.com/macros/s/AKfycbwcaK44Cf0jgGRvypCDqnpsfT1SLaf7zrJY9vgi-LMu875JAYnpFBpd5mcCAqF6cE0A/exec
   
-- スプレッドシート（閲覧）：https://docs.google.com/spreadsheets/d/1m2qiw2VJConvFoCVkth9AKOiL-yB8-q9UYrvv6nE6z4/edit?usp=sharing
+- スプレッドシート（閲覧）：
+https://docs.google.com/spreadsheets/d/1m2qiw2VJConvFoCVkth9AKOiL-yB8-q9UYrvv6nE6z4/edit?usp=sharing
 
-- Googleフォーム（回答）：https://docs.google.com/forms/d/e/1FAIpQLScrUmFdRzOBXmRb78tXxJsjvC_fE94ho2kucdYOEUTFhCKk_g/viewform
+- Googleフォーム（回答）：
+https://docs.google.com/forms/d/e/1FAIpQLScrUmFdRzOBXmRb78tXxJsjvC_fE94ho2kucdYOEUTFhCKk_g/viewform
 
 ## 概要
 - 目的：角張会に賛同し参加してくれる素敵な会員を管理するためのWebアプリ
