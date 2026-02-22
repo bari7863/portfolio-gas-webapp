@@ -46,7 +46,7 @@ https://docs.google.com/forms/d/e/1FAIpQLScrUmFdRzOBXmRb78tXxJsjvC_fE94ho2kucdYO
 
 - Google スプレッドシート
 
-- HTML/CSS/JavaScript
+- HTML / CSS / JavaScript
 
 ## 画面イメージ
 
