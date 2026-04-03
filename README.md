@@ -1,7 +1,7 @@
 # gas-webapp-Membership management
 - GASで作成したWebアプリ（角張会_会員管理）
 
-# GAS Webアプリ：角張会_会員管理
+# Webアプリ（GAS）：角張会_会員管理
 
 ## URL
 ### Webアプリ
